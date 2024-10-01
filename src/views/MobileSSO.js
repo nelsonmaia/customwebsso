@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { getConfig } from "../config";
 import auth0 from 'auth0-js';
 
+// Initialize configuration
 const { seamlessLoginPageClientId, domain } = getConfig();
-const ssoConnection = "m2wv-mobilesso-db"
-const host = "https://spa.yusasaki0.app"
+const ssoConnection = "m2wv-mobilesso-db";
+const host = "https://spa.yusasaki0.app";
 const webAuth = new auth0.WebAuth({
   domain,
   clientID: seamlessLoginPageClientId,
@@ -13,17 +14,39 @@ const webAuth = new auth0.WebAuth({
   responseType: 'id_token'
 });
 
-const searchParams = new URLSearchParams(document.location.search)
-const ssoCompleted = Boolean(searchParams.get("sso_completed"))
-const DEBUG = Boolean(searchParams.get("debug"))
+// Get search parameters
+const searchParams = new URLSearchParams(document.location.search);
+const ssoCompleted = Boolean(searchParams.get("sso_completed"));
+const DEBUG = Boolean(searchParams.get("debug"));
+
+// Function to update debug information in the custom HTML element
+const updateDebugInfo = (message) => {
+  const debugElement = document.getElementById('debugInfo');
+  if (debugElement) {
+    debugElement.textContent = message;
+  }
+};
+
+// Create the debug div element on page load
+useEffect(() => {
+  const debugDiv = document.createElement('div');
+  debugDiv.id = 'debugInfo';
+  debugDiv.style.position = 'fixed';
+  debugDiv.style.top = '0';
+  debugDiv.style.width = '100%';
+  debugDiv.style.backgroundColor = 'yellow';
+  debugDiv.style.zIndex = '9999';
+  debugDiv.style.padding = '10px';
+  document.body.appendChild(debugDiv);
+}, []);
 
 window.callbackFromMobileApp = function (json) {
-  alert("Message received from native app: " + JSON.stringify(json)); // Alert to check if the message is received
+  updateDebugInfo("Message received from native app: " + JSON.stringify(json)); // Update debug element with message received
   console.log("Message received:", json);
   try {
     const user_id = json.userId;
     const accessToken = json.accessToken;
-    alert("Attempting login with userId: " + user_id + " and accessToken: " + accessToken); // Debug alert before login
+    updateDebugInfo("Attempting login with userId: " + user_id + " and accessToken: " + accessToken); // Update debug before login
     webAuth.login({
       realm: ssoConnection,
       email: `${user_id}@user.id`,
@@ -31,24 +54,24 @@ window.callbackFromMobileApp = function (json) {
     });
   } catch (e) {
     console.log(e);
-    alert("Error during login: " + e.message); // Alert error during login
+    updateDebugInfo("Error during login: " + e.message); // Update debug on error
   }
-}
+};
 
 const testSSO = (e, { accessToken, userId }) => {
   e.preventDefault();
-  alert("Testing SSO with userId: " + userId + " and accessToken: " + accessToken); // Alert to test SSO manually
+  updateDebugInfo("Testing SSO with userId: " + userId + " and accessToken: " + accessToken); // Update debug for manual test
   window.callbackFromMobileApp({ accessToken, userId });
-}
+};
 
 window.webToNativeHelper = {
   isWebViewContext: () => {
     const isWebView = !!window.webkit || !!window.flutterApp || !!window.ReactNativeWebView;
-    alert("Is web view context: " + isWebView); // Alert if running in web view
+    updateDebugInfo("Is web view context: " + isWebView); // Update debug if running in web view
     return isWebView;
   },
   postMessage: (message) => {
-    alert("Sending message to native app: " + JSON.stringify(message)); // Alert before sending a message to the native app
+    updateDebugInfo("Sending message to native app: " + JSON.stringify(message)); // Update debug before sending message
     window.webkit?.messageHandlers?.nativeBridge?.postMessage(message) || 
     window.flutterApp?.postMessage(JSON.stringify(message)) || 
     window.ReactNativeWebView?.postMessage(JSON.stringify(message));
@@ -75,7 +98,7 @@ export const MobileSSOComponent = () => {
   }
 
   if (ssoCompleted) {
-    alert("SSO completed, redirecting..."); // Alert to notify that SSO is completed
+    updateDebugInfo("SSO completed, redirecting..."); // Update debug when SSO completed
     loginWithRedirect({
       authorizationParams: {
         connection: ssoConnection,
@@ -86,11 +109,11 @@ export const MobileSSOComponent = () => {
   }
 
   if (!window.webToNativeHelper.isWebViewContext()) { 
-    alert("Not in a web view context."); // Alert if it's not a web view context
+    updateDebugInfo("Not in a web view context."); // Update debug if not in web view context
     return (<div>このページはモバイルアプリケーションからのみアクセスできます</div>); 
   }
 
-  alert("Sending mobilesso action to native app."); // Alert before sending mobilesso message
+  updateDebugInfo("Sending mobilesso action to native app."); // Update debug when sending mobilesso action
   window.webToNativeHelper.postMessage({ "action": "mobilesso" });
   return (<div>Auth0とセッションを確立しようとしています。。。</div>);
 };
