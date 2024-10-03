@@ -6,6 +6,7 @@ import Loading from "../components/Loading";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 
 export const ProfileComponent = () => {
+  
   const { user, loginWithRedirect } = useAuth0();
 
   console.log("I'm inside this page")
@@ -40,6 +41,8 @@ export const ProfileComponent = () => {
     </Container>
   );
 };
+
+export default Profile;
 
 // export default withAuthenticationRequired(ProfileComponent, {
 //   onRedirecting: () => <Loading />, loginOptions : {}
