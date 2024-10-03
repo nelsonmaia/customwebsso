@@ -6,7 +6,18 @@ import Loading from "../components/Loading";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 
 export const ProfileComponent = () => {
-  const { user } = useAuth0();
+  const { user, loginWithRedirect } = useAuth0();
+
+  console.log("I'm inside this page")
+
+  const searchParams = new URLSearchParams(document.location.search)
+  const loginToken = searchParams.get("login_token");
+
+  console.log("loginToken", loginToken);
+
+  if(loginToken){
+    loginWithRedirect({"login_token" : loginToken});
+  }
 
   return (
     <Container className="mb-5">
@@ -30,6 +41,6 @@ export const ProfileComponent = () => {
   );
 };
 
-export default withAuthenticationRequired(ProfileComponent, {
-  onRedirecting: () => <Loading />,
-});
+// export default withAuthenticationRequired(ProfileComponent, {
+//   onRedirecting: () => <Loading />, loginOptions : {}
+// });
