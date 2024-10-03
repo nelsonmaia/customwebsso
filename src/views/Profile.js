@@ -42,7 +42,7 @@ export const ProfileComponent = () => {
   );
 };
 
-export default Profile;
+export default ProfileComponent;
 
 // export default withAuthenticationRequired(ProfileComponent, {
 //   onRedirecting: () => <Loading />, loginOptions : {}
